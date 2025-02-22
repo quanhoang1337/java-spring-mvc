@@ -1,1 +1,1 @@
-We are all alone in our journey , so nothing can't stop us .
+We are all alone in our journey , so nothing can't stop us to reach our goals .
