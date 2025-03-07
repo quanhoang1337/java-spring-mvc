@@ -71,7 +71,8 @@ public class UserController {
 
         // List<FieldError> errors = newUserBindingResult.getFieldErrors();
         // for (FieldError error : errors) {
-        //     System.out.println(">>>>" + error.getField() + " - " + error.getDefaultMessage());
+        // System.out.println(">>>>" + error.getField() + " - " +
+        // error.getDefaultMessage());
         // }
 
         // validate
