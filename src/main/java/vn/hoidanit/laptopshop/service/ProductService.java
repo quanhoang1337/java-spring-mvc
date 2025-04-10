@@ -32,8 +32,12 @@ public class ProductService {
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
 
-    public ProductService(ProductRepository productRepository, CartRepository cartRepository,
-            CartDetailRepository cartDetailRepository, UserService userService, OrderRepository orderRepository,
+    public ProductService(
+            ProductRepository productRepository,
+            CartRepository cartRepository,
+            CartDetailRepository cartDetailRepository,
+            UserService userService,
+            OrderRepository orderRepository,
             OrderDetailRepository orderDetailRepository) {
         this.productRepository = productRepository;
         this.cartRepository = cartRepository;
@@ -83,64 +87,66 @@ public class ProductService {
     // }
 
     // case 5
-    // public Page<Product> fetchProductsWithSpec(Pageable page, String price) {
-    // // eg: price 10-toi-15-trieu
-    // if (price.equals("10-toi-15-trieu")) {
-    // double min = 10000000;
-    // double max = 15000000;
-    // return this.productRepository.findAll(ProductSpecs.matchPrice(min, max),
-    // page);
+    public Page<Product> fetchProductsWithSpec(Pageable page, String price) {
+        // eg: price 10-toi-15-trieu
+        if (price.equals("10-toi-15-trieu")) {
+            double min = 10000000;
+            double max = 15000000;
+            return this.productRepository.findAll(ProductSpecs.matchPrice(min, max),
+                    page);
 
-    // } else if (price.equals("15-toi-30-trieu")) {
-    // double min = 15000000;
-    // double max = 30000000;
-    // return this.productRepository.findAll(ProductSpecs.matchPrice(min, max),
-    // page);
-    // } else
+        } else if (price.equals("15-toi-30-trieu")) {
+            double min = 15000000;
+            double max = 30000000;
+            return this.productRepository.findAll(ProductSpecs.matchPrice(min, max),
+                    page);
+        } else
+            return this.productRepository.findAll(page);
+    }
+
+    // case 6
+    // public Page<Product> fetchProductsWithSpec(Pageable page, List<String> price)
+    // {
+    // Specification<Product> combinedSpec = (root, query, criteriaBuilder) ->
+    // criteriaBuilder.disjunction();
+    // int count = 0;
+    // for (String p : price) {
+    // double min = 0;
+    // double max = 0;
+
+    // // Set the appropriate min and max based on the price range string
+    // switch (p) {
+    // case "10-toi-15-trieu":
+    // min = 10000000;
+    // max = 15000000;
+    // count++;
+    // break;
+    // case "15-toi-20-trieu":
+    // min = 15000000;
+    // max = 20000000;
+    // count++;
+    // break;
+    // case "20-toi-30-trieu":
+    // min = 20000000;
+    // max = 30000000;
+    // count++;
+    // break;
+    // // Add more cases as needed
+    // }
+
+    // if (min != 0 && max != 0) {
+    // Specification<Product> rangeSpec = ProductSpecs.matchMultiplePrice(min, max);
+    // combinedSpec = combinedSpec.or(rangeSpec);
+    // }
+    // }
+
+    // // Check if any price ranges were added (combinedSpec is empty)
+    // if (count == 0) {
     // return this.productRepository.findAll(page);
     // }
 
-    // case 6
-    public Page<Product> fetchProductsWithSpec(Pageable page, List<String> price) {
-        Specification<Product> combinedSpec = (root, query, criteriaBuilder) -> criteriaBuilder.disjunction();
-        int count = 0;
-        for (String p : price) {
-            double min = 0;
-            double max = 0;
-
-            // Set the appropriate min and max based on the price range string
-            switch (p) {
-                case "10-toi-15-trieu":
-                    min = 10000000;
-                    max = 15000000;
-                    count++;
-                    break;
-                case "15-toi-20-trieu":
-                    min = 15000000;
-                    max = 20000000;
-                    count++;
-                    break;
-                case "20-toi-30-trieu":
-                    min = 20000000;
-                    max = 30000000;
-                    count++;
-                    break;
-                // Add more cases as needed
-            }
-
-            if (min != 0 && max != 0) {
-                Specification<Product> rangeSpec = ProductSpecs.matchMultiplePrice(min, max);
-                combinedSpec = combinedSpec.or(rangeSpec);
-            }
-        }
-
-        // Check if any price ranges were added (combinedSpec is empty)
-        if (count == 0) {
-            return this.productRepository.findAll(page);
-        }
-
-        return this.productRepository.findAll(combinedSpec, page);
-    }
+    // return this.productRepository.findAll(combinedSpec, page);
+    // }
 
     public Optional<Product> fetchProductById(long id) {
         return this.productRepository.findById(id);
@@ -154,7 +160,7 @@ public class ProductService {
 
         User user = this.userService.getUserByEmail(email);
         if (user != null) {
-            // check user đã có cart hay chưa ? nếu chưa -> tạo mới
+            // check user đã có Cart chưa ? nếu chưa -> tạo mới
             Cart cart = this.cartRepository.findByUser(user);
 
             if (cart == null) {
@@ -170,11 +176,10 @@ public class ProductService {
             // tìm product by id
 
             Optional<Product> productOptional = this.productRepository.findById(productId);
-
             if (productOptional.isPresent()) {
                 Product realProduct = productOptional.get();
 
-                // check sản phẩm đã từng được thêm vào giỏ hàng trước đây chưa
+                // check sản phẩm đã từng được thêm vào giỏ hàng trước đây chưa ?
                 CartDetail oldDetail = this.cartDetailRepository.findByCartAndProduct(cart, realProduct);
                 //
                 if (oldDetail == null) {
@@ -182,18 +187,19 @@ public class ProductService {
                     cd.setCart(cart);
                     cd.setProduct(realProduct);
                     cd.setPrice(realProduct.getPrice());
-                    cd.setQuantity(1);
+                    cd.setQuantity(quantity);
                     this.cartDetailRepository.save(cd);
 
-                    // update cart (sum)
+                    // update cart (sum);
                     int s = cart.getSum() + 1;
                     cart.setSum(s);
                     this.cartRepository.save(cart);
                     session.setAttribute("sum", s);
                 } else {
-                    oldDetail.setQuantity(oldDetail.getQuantity() + 1);
+                    oldDetail.setQuantity(oldDetail.getQuantity() + quantity);
                     this.cartDetailRepository.save(oldDetail);
                 }
+
             }
 
         }
@@ -287,5 +293,6 @@ public class ProductService {
                 session.setAttribute("sum", 0);
             }
         }
+
     }
 }
