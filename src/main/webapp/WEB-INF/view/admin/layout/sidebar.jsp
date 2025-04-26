@@ -28,7 +28,7 @@
                 </div>
                 <div class="sb-sidenav-footer">
                     <div class="small">Logged in as:</div>
-                    Sukuna
+                    ${sessionScope.fullName}
                 </div>
             </nav>
         </div>
