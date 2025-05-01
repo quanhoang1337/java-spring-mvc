@@ -17,10 +17,17 @@ import org.springframework.session.security.web.authentication.SpringSessionReme
 import jakarta.servlet.DispatcherType;
 import vn.hoidanit.laptopshop.service.CustomUserDetailsService;
 import vn.hoidanit.laptopshop.service.UserService;
+import vn.hoidanit.laptopshop.service.userinfo.CustomOAuth2UserService;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
+
+    private final UserService userService;
+
+    SecurityConfiguration(UserService userService) {
+        this.userService = userService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -59,7 +66,9 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(
+            HttpSecurity http,
+            UserService userService) throws Exception {
         // v6. lamda
         http
                 .authorizeHttpRequests(authorize -> authorize
@@ -75,8 +84,11 @@ public class SecurityConfiguration {
 
                         .anyRequest().authenticated())
 
-                .oauth2Login(oauth2 -> oauth2.loginPage("/login"))
-                // .oauth2Login(Customizer.withDefaults())
+                .oauth2Login(oauth2 -> oauth2.loginPage("/login")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/login?error")
+                        .userInfoEndpoint(user -> user
+                                .userService(new CustomOAuth2UserService(userService))))
 
                 .sessionManagement((sessionManagement) -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)

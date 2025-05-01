@@ -23,7 +23,8 @@ public class UserService {
 
     public UserService(UserRepository userRepository,
             RoleRepository roleRepository,
-            ProductRepository productRepository, OrderRepository orderRepository) {
+            ProductRepository productRepository,
+            OrderRepository orderRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.productRepository = productRepository;
