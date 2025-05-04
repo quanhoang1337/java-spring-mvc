@@ -40,8 +40,12 @@ public class UserService {
     }
 
     public User handleSaveUser(User user) {
-        User eric = this.userRepository.save(user);
-        return eric;
+        User sukuna = this.userRepository.save(user);
+        return sukuna;
+    }
+
+    public void saveUser(User user) {
+        this.userRepository.save(user);
     }
 
     public User getUserById(long id) {

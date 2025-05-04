@@ -11,6 +11,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import vn.hoidanit.laptopshop.domain.Role;
+import vn.hoidanit.laptopshop.domain.User;
 import vn.hoidanit.laptopshop.service.UserService;
 
 @Service
@@ -34,12 +36,35 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // Process oAuth2User or map it to your local user database
         String email = (String) attributes.get("email");
-        System.out.println("User email: " + email);
+
+        String fullName = (String) attributes.get("name");
+
+        Role userRole = this.userService.getRoleByName("USER");
+
+        if (email != null) {
+            User user = this.userService.getUserByEmail(email);
+            if (user == null) {
+                User oUser = new User();
+                oUser.setEmail(email);
+                oUser.setAvatar(
+                        registrationId.equalsIgnoreCase("github")
+                                ? "default-github.png"
+                                : "default-google.png");
+                oUser.setFullName(fullName);
+                oUser.setProvider(
+                        registrationId.equalsIgnoreCase("github")
+                                ? "GITHUB"
+                                : "GOOGLE");
+                oUser.setPassword("sukuna");
+                oUser.setRole(userRole);
+
+                this.userService.saveUser(oUser);
+            }
+        }
 
         return new DefaultOAuth2User(
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")),
-                oAuth2User.getAttributes(),
-                "sub");
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole.getName())),
+                oAuth2User.getAttributes(), "email");
     }
 
 }
